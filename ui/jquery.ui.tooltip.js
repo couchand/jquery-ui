@@ -180,7 +180,8 @@ $.widget( "ui.tooltip", {
 	},
 
 	_open: function( event, target, content ) {
-		var tooltip, positionOption;
+		var tooltip, positionOption, latestEvent,
+			that = this;
 		if ( !content ) {
 			return;
 		}
@@ -233,6 +234,26 @@ $.widget( "ui.tooltip", {
 		}
 
 		tooltip.hide();
+
+		if ( this.options.track && this.options.show && this.options.show.delay ) {
+			this._on( this.document, {
+				mousemove: function( event ) {
+					latestEvent = event;
+				}
+			});
+			window.setTimeout( function() {
+				var intervalId = window.setInterval( function() {
+					if( tooltip.is( ":visible" ) && latestEvent ) {
+						window.clearInterval( intervalId );
+						position( latestEvent );
+						that._off( that.document, "mousemove" );
+						that._on( that.document, {
+							mousemove: position
+						});
+					}
+				}, $.fx.interval );
+			}, this.options.show.delay );
+		}
 
 		this._show( tooltip, this.options.show );
 
