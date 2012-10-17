@@ -214,8 +214,12 @@ $.widget( "ui.tooltip", {
 		tooltip.find( ".ui-tooltip-content" ).html( content );
 
 		function position( event ) {
-			positionOption.of = event;
-			tooltip.position( positionOption );
+			if ( this.options.show && this.options.show.delay && tooltip.is( ":hidden" ) ) {
+				latestEvent = event;
+			} else {
+				positionOption.of = event;
+				tooltip.position( positionOption );
+			}
 		}
 		if ( this.options.track && event && /^mouse/.test( event.originalEvent.type ) ) {
 			positionOption = $.extend( {}, this.options.position );
@@ -233,20 +237,11 @@ $.widget( "ui.tooltip", {
 		tooltip.hide();
 
 		if ( this.options.track && this.options.show && this.options.show.delay ) {
-			this._on( this.document, {
-				mousemove: function( event ) {
-					latestEvent = event;
-				}
-			});
 			window.setTimeout( function() {
 				var intervalId = window.setInterval( function() {
 					if( tooltip.is( ":visible" ) && latestEvent ) {
 						window.clearInterval( intervalId );
 						position( latestEvent );
-						that._off( that.document, "mousemove" );
-						that._on( that.document, {
-							mousemove: position
-						});
 					}
 				}, $.fx.interval );
 			}, this.options.show.delay );
