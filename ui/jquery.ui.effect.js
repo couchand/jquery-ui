@@ -1045,6 +1045,14 @@ $.extend( $.effects, {
 // return an effect options object for the given parameters:
 function _normalizeArguments( effect, options, speed, callback ) {
 
+	// catch (effect, callback)
+	// and   (options, callback)
+	if ( $.isFunction( options ) ) {
+		callback = options;
+		speed = null;
+		options = {};
+	}
+
 	// allow passing all optinos as the first parameter
 	if ( $.isPlainObject( effect ) ) {
 		options = effect;
@@ -1056,13 +1064,6 @@ function _normalizeArguments( effect, options, speed, callback ) {
 
 	// catch (effect)
 	if ( options === undefined ) {
-		options = {};
-	}
-
-	// catch (effect, callback)
-	if ( $.isFunction( options ) ) {
-		callback = options;
-		speed = null;
 		options = {};
 	}
 
@@ -1090,7 +1091,10 @@ function _normalizeArguments( effect, options, speed, callback ) {
 		speed in $.fx.speeds ? $.fx.speeds[ speed ] :
 		$.fx.speeds._default;
 
-	effect.complete = callback || options.complete;
+	effect.complete = callback || options.complete ? function(){
+		options.complete && options.complete.call( this, arguments );
+		callback && callback.call( this, arguments );
+	} : false;
 
 	return effect;
 }
