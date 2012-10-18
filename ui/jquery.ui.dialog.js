@@ -230,7 +230,8 @@ $.widget("ui.dialog", {
 
 	close: function( event ) {
 		var that = this,
-			maxZ, thisZ;
+			maxZ, thisZ,
+			callback, hideOptions;
 
 		if ( !this._isOpen ) {
 			return;
@@ -247,9 +248,19 @@ $.widget("ui.dialog", {
 		}
 
 		if ( this.options.hide ) {
-			this.uiDialog.hide( this.options.hide, function() {
-				that._trigger( "close", event );
-			});
+			if( $.isPlainObject( this.options.hide ) ) {
+				callback = this.options.hide.complete;
+				hideOptions = $.extend( {}, this.options.hide );
+				hideOptions.complete = function() {
+					callback && callback.call( this, arguments );
+					that._trigger( "close", event );
+				};
+				this.uiDialog.hide( hideOptions );
+			} else {
+				this.uiDialog.hide( this.options.hide, function() {
+					that._trigger( "close", event );
+				});
+			}
 		} else {
 			this.uiDialog.hide();
 			this._trigger( "close", event );
